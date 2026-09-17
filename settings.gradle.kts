@@ -25,3 +25,5 @@ dependencyResolutionManagement {
 rootProject.name = "Backstage"
 include(":app")
 include(":backstage")
+include(":backstage:impl")
+include(":backstage:noOp")

@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace = "dev.pinaki.backstage.library"
+    namespace = "dev.pinaki.backstage.library.impl"
     enableKotlin = false
     compileSdk {
         version = release(37)
