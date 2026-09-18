@@ -1,12 +1,9 @@
 package dev.pinaki.backstage.library;
 
-import org.jetbrains.annotations.NotNull;
-
 public class Backstage {
 
-    private static Backstage INSTANCE = null;
+    private static volatile Backstage INSTANCE = null;
 
-    @NotNull
     public static Backstage getInstance() {
         if (INSTANCE == null) {
             synchronized (Backstage.class) {
