@@ -1,20 +1,21 @@
 package dev.pinaki.backstage.library.impl.http;
 
+import android.content.Context;
 import android.content.res.AssetManager;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import dev.pinaki.backstage.library.impl.http.middlewares.AssetMiddleware;
+import dev.pinaki.backstage.library.impl.http.middlewares.ControllerMiddleware;
 import dev.pinaki.backstage.library.impl.http.middlewares.ErrorMiddleware;
+import dev.pinaki.backstage.library.BasicController;
 
 /**
  * A small HTTP/1.1 server that serves the Backstage web application from assets.
@@ -23,6 +24,7 @@ public final class BackstageHttpServer implements Closeable {
     public static final int DEFAULT_PORT = 8317;
 
     private final int requestedPort;
+    private final boolean logServerUrls;
     private ServerSocket serverSocket;
     private ExecutorService clients;
     private final RequestChain.Executor requestChainExecutor;
@@ -34,29 +36,56 @@ public final class BackstageHttpServer implements Closeable {
         this(assetManager, DEFAULT_PORT);
     }
 
+    public BackstageHttpServer(Context context) {
+        this(DEFAULT_PORT,
+                path -> context.getAssets().open("backstage/" + path, AssetManager.ACCESS_STREAMING),
+                resourceId -> context.getResources().openRawResource(resourceId), true);
+    }
+
     /**
      * Serves files below {@code backstage/} on {@code port}. Use 0 to select a free port.
      */
     public BackstageHttpServer(AssetManager assetManager, int port) {
-        this(port, path -> assetManager.open("backstage/" + path, AssetManager.ACCESS_STREAMING));
+        this(port, path -> assetManager.open("backstage/" + path, AssetManager.ACCESS_STREAMING),
+                resourceId -> { throw new IOException("No resource source configured"); }, true);
     }
 
     BackstageHttpServer(int port, AssetSource assets) {
+        this(port, assets,
+                resourceId -> { throw new IOException("No resource source configured"); }, false);
+    }
+
+    BackstageHttpServer(int port, AssetSource assets,
+                        ControllerMiddleware.ResourceSource resources) {
+        this(port, assets, resources, false);
+    }
+
+    private BackstageHttpServer(int port, AssetSource assets,
+                                ControllerMiddleware.ResourceSource resources,
+                                boolean logServerUrls) {
         if (port < 0 || port > 65535) {
             throw new IllegalArgumentException("port must be between 0 and 65535");
         }
         requestedPort = port;
-        requestChainExecutor = RequestChain.Executor.withMiddlewares(
-                Arrays.asList(new ErrorMiddleware(), new AssetMiddleware(assets)));
+        this.logServerUrls = logServerUrls;
+        requestChainExecutor = RequestChain.Executor.withMiddlewares(new java.util.ArrayList<>());
+        requestChainExecutor.addMiddleware(new ErrorMiddleware());
+        requestChainExecutor.addMiddleware(
+                new ControllerMiddleware(requestChainExecutor.getControllers(), resources));
+        requestChainExecutor.addMiddleware(new AssetMiddleware(assets));
+    }
+
+    public void addController(BasicController controller) {
+        requestChainExecutor.addController(controller);
     }
 
     /**
-     * Starts listening on the loopback interface. Calling this twice has no effect.
+     * Starts listening on every network interface. Calling this twice has no effect.
      */
     public synchronized void start() throws IOException {
         if (serverSocket != null) return;
 
-        ServerSocket socket = new ServerSocket(requestedPort, 50, InetAddress.getLoopbackAddress());
+        ServerSocket socket = new ServerSocket(requestedPort, 50, null);
         ExecutorService executor = Executors.newCachedThreadPool(runnable -> {
             Thread thread = new Thread(runnable, "Backstage HTTP client");
             thread.setDaemon(true);
@@ -68,6 +97,7 @@ public final class BackstageHttpServer implements Closeable {
                 "Backstage HTTP server");
         acceptThread.setDaemon(true);
         acceptThread.start();
+        if (logServerUrls) ServerUrlLogger.log(socket.getLocalPort());
     }
 
     /**

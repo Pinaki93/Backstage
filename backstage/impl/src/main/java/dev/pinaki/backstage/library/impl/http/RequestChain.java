@@ -5,7 +5,9 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import dev.pinaki.backstage.library.BasicController;
 import dev.pinaki.backstage.library.impl.http.util.RequestReader;
 
 public final class RequestChain {
@@ -15,6 +17,7 @@ public final class RequestChain {
 
     public static class Executor {
         private final List<Middleware> middlewares;
+        private final List<BasicController> controllers = new CopyOnWriteArrayList<>();
 
         public static Executor withMiddlewares(List<Middleware> middlewares) {
             return new Executor(middlewares);
@@ -22,6 +25,14 @@ public final class RequestChain {
 
         public void addMiddleware(Middleware middleware) {
             middlewares.add(middleware);
+        }
+
+        public void addController(BasicController controller) {
+            controllers.add(controller);
+        }
+
+        public List<BasicController> getControllers() {
+            return controllers;
         }
 
         private Executor(List<Middleware> middlewares) {

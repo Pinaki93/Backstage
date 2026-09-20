@@ -33,6 +33,12 @@ public class HttpRequest {
         return method;
     }
 
+    public String getPath() {
+        if (path == null) return null;
+        int query = path.indexOf('?');
+        return query >= 0 ? path.substring(0, query) : path;
+    }
+
     public String assetPath() {
         return assetPath.getWithoutSync();
     }

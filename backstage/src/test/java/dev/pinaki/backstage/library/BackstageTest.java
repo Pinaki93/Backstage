@@ -14,7 +14,7 @@ public class BackstageTest {
             }
 
             @Override
-            public void addPage(Page page) {
+            public void addController(BasicController controller) {
             }
         };
         Backstage instance = Backstage.getInstance(delegate);

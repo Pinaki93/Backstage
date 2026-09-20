@@ -21,7 +21,7 @@ public class Backstage {
     public interface Delegate {
         void init();
 
-        void addPage(Page page);
+        void addController(BasicController controller);
     }
 
 
@@ -33,8 +33,8 @@ public class Backstage {
         delegate.init();
     }
 
-    public Backstage addPage(Page page) {
-        delegate.addPage(page);
+    public Backstage addController(BasicController controller) {
+        delegate.addController(controller);
         return this;
     }
 

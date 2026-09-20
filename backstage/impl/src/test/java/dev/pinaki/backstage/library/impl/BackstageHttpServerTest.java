@@ -18,6 +18,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import dev.pinaki.backstage.library.BasicController;
+
 public class BackstageHttpServerTest {
     private BackstageHttpServer server;
 
@@ -44,6 +46,41 @@ public class BackstageHttpServerTest {
         String response = request("GET / HTTP/1.1\r\nHost: localhost\r\n\r\n");
         assertTrue(response.startsWith("HTTP/1.1 200 OK\r\n"));
         assertTrue(response.contains("Content-Type: text/html; charset=utf-8\r\n"));
+        assertTrue(response.endsWith("<h1>Backstage</h1>"));
+    }
+
+    @Test
+    public void registeredControllerServesHtmlResource() throws IOException {
+        server.close();
+        server = new BackstageHttpServer(0,
+                path -> new ByteArrayInputStream("asset fallback".getBytes(StandardCharsets.UTF_8)),
+                resourceId -> new ByteArrayInputStream(
+                        "<h1>Sample controller</h1>".getBytes(StandardCharsets.UTF_8)));
+        server.addController(new BasicController("/") {
+            @Override
+            public int getHtmlResource() {
+                return 7;
+            }
+        });
+        server.start();
+
+        String response = request("GET / HTTP/1.1\r\n\r\n");
+
+        assertTrue(response.contains("Content-Type: text/html; charset=utf-8\r\n"));
+        assertTrue(response.endsWith("<h1>Sample controller</h1>"));
+    }
+
+    @Test
+    public void unhandledControllerPathFallsBackToAsset() throws IOException {
+        server.addController(new BasicController("/controller") {
+            @Override
+            public int getHtmlResource() {
+                return 7;
+            }
+        });
+
+        String response = request("GET / HTTP/1.1\r\n\r\n");
+
         assertTrue(response.endsWith("<h1>Backstage</h1>"));
     }
 
