@@ -1,4 +1,4 @@
-package dev.pinaki.backstage.library.impl.util;
+package dev.pinaki.backstage.library.util;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;

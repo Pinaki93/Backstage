@@ -5,8 +5,7 @@ import java.net.Socket;
 import java.util.LinkedHashMap;
 
 import dev.pinaki.backstage.library.impl.http.util.HttpUtil;
-import dev.pinaki.backstage.library.impl.http.util.RequestReader;
-import dev.pinaki.backstage.library.impl.util.Lazy;
+import dev.pinaki.backstage.library.util.Lazy;
 
 public class HttpRequest {
 

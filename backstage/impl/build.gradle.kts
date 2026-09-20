@@ -3,6 +3,7 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":backstage"))
     testImplementation(libs.junit)
 }
 

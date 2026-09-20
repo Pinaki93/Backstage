@@ -2,6 +2,11 @@ plugins {
     alias(libs.plugins.android.library)
 }
 
+dependencies {
+    implementation(project(":backstage"))
+    testImplementation(libs.junit)
+}
+
 android {
     namespace = "dev.pinaki.backstage.library.noop"
     enableKotlin = false

@@ -37,6 +37,8 @@ android {
 
 dependencies {
     implementation(project(":backstage"))
+    debugImplementation(project(":backstage:impl"))
+    releaseImplementation(project(":backstage:noOp"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)

@@ -8,9 +8,18 @@ import org.junit.Test;
 public class BackstageTest {
     @Test
     public void getInstanceReturnsSingleton() {
-        Backstage instance = Backstage.getInstance();
+        Backstage.Delegate delegate = new Backstage.Delegate() {
+            @Override
+            public void init() {
+            }
+
+            @Override
+            public void addPage(Page page) {
+            }
+        };
+        Backstage instance = Backstage.getInstance(delegate);
 
         assertNotNull(instance);
-        assertSame(instance, Backstage.getInstance());
+        assertSame(instance, Backstage.getInstance(delegate));
     }
 }

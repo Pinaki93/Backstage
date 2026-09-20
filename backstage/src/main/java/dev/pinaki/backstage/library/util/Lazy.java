@@ -1,4 +1,4 @@
-package dev.pinaki.backstage.library.impl.util;
+package dev.pinaki.backstage.library.util;
 
 public class Lazy<T> {
     private volatile T value = null;
@@ -13,6 +13,18 @@ public class Lazy<T> {
     }
 
     public T get() {
+        if (value == null) {
+            synchronized (producer) {
+                if (value == null) {
+                    value = producer.produce();
+                }
+            }
+        }
+
+        return value;
+    }
+
+    public T getWithParam() {
         if (value == null) {
             synchronized (producer) {
                 if (value == null) {
