@@ -7,7 +7,7 @@ import java.util.Locale;
 import dev.pinaki.backstage.library.impl.http.BackstageHttpServer;
 import dev.pinaki.backstage.library.impl.http.HttpRequest;
 import dev.pinaki.backstage.library.impl.http.Middleware;
-import dev.pinaki.backstage.library.impl.http.RequestChain;
+import dev.pinaki.backstage.library.impl.http.util.ResponseUtil;
 import dev.pinaki.backstage.library.impl.http.util.StreamUtil;
 
 public class AssetMiddleware implements Middleware {
@@ -19,11 +19,15 @@ public class AssetMiddleware implements Middleware {
     }
 
     @Override
-    public boolean handle(HttpRequest request, RequestChain chain) throws IOException {
+    public boolean canHandle(HttpRequest request) {
+        return true;
+    }
+
+    @Override
+    public boolean handle(HttpRequest request) throws IOException {
         try (InputStream asset = assets.open(request.assetPath())) {
-            request.respond(200, "OK", contentType(request.assetPath()),
-                    StreamUtil.readFully(asset), request.isHead(), "");
-            return true;
+            return ResponseUtil.bytes(request, contentType(request.assetPath()),
+                    StreamUtil.readFully(asset));
         } catch (IOException missing) {
             return false;
         }

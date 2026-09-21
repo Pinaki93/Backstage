@@ -26,4 +26,9 @@ public final class BackstageDelegate implements Backstage.Delegate {
     public void addController(BasicController controller) {
         server.addController(controller);
     }
+
+    @Override
+    public void addController(KeyValueController controller) {
+        server.addController(controller);
+    }
 }

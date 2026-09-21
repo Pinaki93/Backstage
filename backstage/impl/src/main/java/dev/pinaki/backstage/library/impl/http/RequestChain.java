@@ -5,34 +5,24 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
-import dev.pinaki.backstage.library.BasicController;
 import dev.pinaki.backstage.library.impl.http.util.RequestReader;
+import dev.pinaki.backstage.library.impl.http.util.ResponseUtil;
 
 public final class RequestChain {
     private final List<Middleware> middlewares = new ArrayList<>();
     private final HttpRequest httpRequest;
-    private int index;
 
     public static class Executor {
         private final List<Middleware> middlewares;
-        private final List<BasicController> controllers = new CopyOnWriteArrayList<>();
 
-        public static Executor withMiddlewares(List<Middleware> middlewares) {
-            return new Executor(middlewares);
+        public static Executor getInstance() {
+            return new Executor(new ArrayList<>());
         }
 
-        public void addMiddleware(Middleware middleware) {
+        public Executor addMiddleware(Middleware middleware) {
             middlewares.add(middleware);
-        }
-
-        public void addController(BasicController controller) {
-            controllers.add(controller);
-        }
-
-        public List<BasicController> getControllers() {
-            return controllers;
+            return this;
         }
 
         private Executor(List<Middleware> middlewares) {
@@ -42,10 +32,12 @@ public final class RequestChain {
         public void execute(Socket client) {
             try (Socket socket = client;
                  OutputStream ignored = socket.getOutputStream()) {
-                RequestChain
+                RequestChain chain = RequestChain
                         .withClient(socket)
-                        .withMiddlewares(middlewares)
-                        .handle();
+                        .withMiddlewares(middlewares);
+                if (!chain.handle()) {
+                    ResponseUtil.text(chain.httpRequest, 404, "Not Found", "Not Found");
+                }
             } catch (IOException ignored) {
                 // A client may disconnect at any point.
             }
@@ -61,15 +53,28 @@ public final class RequestChain {
             // Consume the rest of the request before closing the connection so the client can
             // reliably receive the error response instead of seeing a TCP reset.
             reader.readHeaders();
-            httpRequest = new HttpRequest(client, null, null, null, null);
+            httpRequest = new HttpRequest(client, null, null, null,
+                    null, null);
         } else {
-            httpRequest = new HttpRequest(client, parts[0], parts[1], parts[2], reader.readHeaders());
+            java.util.LinkedHashMap<String, String> headers = reader.readHeaders();
+            int contentLength = 0;
+            for (java.util.Map.Entry<String, String> header : headers.entrySet()) {
+                if (header.getKey().equalsIgnoreCase("Content-Length")) {
+                    try {
+                        contentLength = Integer.parseInt(header.getValue());
+                    } catch (NumberFormatException invalid) {
+                        contentLength = -1;
+                    }
+                }
+            }
+            httpRequest = new HttpRequest(client, parts[0], parts[1], parts[2], headers,
+                    reader.readBody(contentLength));
         }
 
         return new RequestChain(httpRequest);
     }
 
-    private RequestChain(HttpRequest httpRequest) {
+    RequestChain(HttpRequest httpRequest) {
         this.httpRequest = httpRequest;
     }
 
@@ -79,7 +84,11 @@ public final class RequestChain {
     }
 
     public boolean handle() throws IOException {
-        if (index == middlewares.size()) return false;
-        return middlewares.get(index++).handle(httpRequest, this);
+        for (Middleware middleware : middlewares) {
+            if (middleware.canHandle(httpRequest) &&
+                    middleware.handle(httpRequest))
+                return true;
+        }
+        return false;
     }
 }

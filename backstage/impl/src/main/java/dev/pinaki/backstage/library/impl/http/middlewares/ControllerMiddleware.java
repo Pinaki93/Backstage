@@ -2,36 +2,50 @@ package dev.pinaki.backstage.library.impl.http.middlewares;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 import dev.pinaki.backstage.library.BasicController;
+import dev.pinaki.backstage.library.impl.di.BackstageContainer;
 import dev.pinaki.backstage.library.impl.http.HttpRequest;
 import dev.pinaki.backstage.library.impl.http.Middleware;
-import dev.pinaki.backstage.library.impl.http.RequestChain;
+import dev.pinaki.backstage.library.impl.http.controller.ControllerFactory;
+import dev.pinaki.backstage.library.impl.http.util.ResponseUtil;
 import dev.pinaki.backstage.library.impl.http.util.StreamUtil;
 
-/** Serves registered controllers and falls through when none owns the request path. */
+/**
+ * Serves registered controllers and falls through when none owns the request path.
+ */
 public final class ControllerMiddleware implements Middleware {
-    private final List<BasicController> controllers;
     private final ResourceSource resources;
+    private final ControllerFactory controllerFactory;
 
-    public ControllerMiddleware(List<BasicController> controllers, ResourceSource resources) {
-        this.controllers = controllers;
+
+    public ControllerMiddleware(BackstageContainer container, ResourceSource resources) {
+        this.controllerFactory = container.controllerFactory();
         this.resources = resources;
     }
 
     @Override
-    public boolean handle(HttpRequest request, RequestChain chain) throws IOException {
-        for (BasicController controller : controllers) {
+    public boolean canHandle(HttpRequest request) {
+        for (BasicController controller : controllerFactory.basicControllers()) {
+            if (controller.getPath().equals(request.getPath())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean handle(HttpRequest request) throws IOException {
+        for (BasicController controller : controllerFactory.basicControllers()) {
             if (controller.getPath().equals(request.getPath())) {
                 try (InputStream html = resources.open(controller.getHtmlResource())) {
-                    request.respond(200, "OK", "text/html; charset=utf-8",
-                            StreamUtil.readFully(html), request.isHead(), "");
+                    ResponseUtil.html(request, StreamUtil.readFully(html));
                 }
                 return true;
             }
         }
-        return chain.handle();
+        return false;
     }
 
     public interface ResourceSource {

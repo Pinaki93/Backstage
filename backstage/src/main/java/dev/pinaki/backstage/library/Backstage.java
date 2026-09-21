@@ -22,6 +22,8 @@ public class Backstage {
         void init();
 
         void addController(BasicController controller);
+
+        void addController(KeyValueController controller);
     }
 
 
@@ -34,6 +36,11 @@ public class Backstage {
     }
 
     public Backstage addController(BasicController controller) {
+        delegate.addController(controller);
+        return this;
+    }
+
+    public Backstage addController(KeyValueController controller) {
         delegate.addController(controller);
         return this;
     }

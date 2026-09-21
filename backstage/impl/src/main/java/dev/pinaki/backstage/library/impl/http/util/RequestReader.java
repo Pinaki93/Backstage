@@ -48,4 +48,16 @@ public class RequestReader {
 
         return headers;
     }
+
+    public byte[] readBody(int length) throws IOException {
+        if (length < 0 || length > 1_048_576) throw new IOException("Invalid Content-Length");
+        byte[] body = new byte[length];
+        int offset = 0;
+        while (offset < length) {
+            int count = inputStream.read(body, offset, length - offset);
+            if (count < 0) throw new IOException("Unexpected end of request body");
+            offset += count;
+        }
+        return body;
+    }
 }

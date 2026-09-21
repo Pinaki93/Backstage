@@ -16,6 +16,10 @@ public class BackstageTest {
             @Override
             public void addController(BasicController controller) {
             }
+
+            @Override
+            public void addController(KeyValueController controller) {
+            }
         };
         Backstage instance = Backstage.getInstance(delegate);
 
