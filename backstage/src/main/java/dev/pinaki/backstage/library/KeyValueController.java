@@ -33,6 +33,7 @@ public abstract class KeyValueController extends BasicController {
 
     /** Returns the most recently emitted snapshot. */
     public final Map<String, String> getEntries() {
+        onAccess();
         return entries;
     }
 
@@ -45,6 +46,7 @@ public abstract class KeyValueController extends BasicController {
     /** Observes snapshots until the returned subscription is closed. */
     public final Subscription observe(EntriesCallback callback) {
         if (callback == null) throw new IllegalArgumentException("callback must not be null");
+        onAccess();
         callbacks.add(callback);
         callback.onChanged(entries);
         return () -> callbacks.remove(callback);
@@ -54,6 +56,10 @@ public abstract class KeyValueController extends BasicController {
         if (newEntries == null) throw new IllegalArgumentException("entries must not be null");
         entries = Collections.unmodifiableMap(new LinkedHashMap<>(newEntries));
         for (EntriesCallback callback : callbacks) callback.onChanged(entries);
+    }
+
+    /** Called before entries are read or observed. */
+    protected void onAccess() {
     }
 
     public abstract void create(String key, String value);

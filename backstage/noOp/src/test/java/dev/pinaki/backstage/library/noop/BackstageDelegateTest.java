@@ -26,5 +26,8 @@ public class BackstageDelegateTest {
             @Override public void delete(String key) { }
             @Override public void clear() { }
         });
+        delegate.addSharedPreferencesExplorer("Preferences", () -> {
+            throw new AssertionError("no-op must not create SharedPreferences");
+        });
     }
 }

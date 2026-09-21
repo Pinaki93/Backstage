@@ -1,5 +1,7 @@
 package dev.pinaki.backstage.library;
 
+import android.content.SharedPreferences;
+
 public class Backstage {
 
     private static volatile Backstage INSTANCE = null;
@@ -24,6 +26,9 @@ public class Backstage {
         void addController(BasicController controller);
 
         void addController(KeyValueController controller);
+
+        void addSharedPreferencesExplorer(String displayName,
+                                          SharedPreferencesFactory factory);
     }
 
 
@@ -43,6 +48,17 @@ public class Backstage {
     public Backstage addController(KeyValueController controller) {
         delegate.addController(controller);
         return this;
+    }
+
+    public Backstage withSharedPrefExplorer(String displayName,
+                                            SharedPreferencesFactory factory) {
+        if (factory == null) throw new IllegalArgumentException("factory must not be null");
+        delegate.addSharedPreferencesExplorer(displayName, factory);
+        return this;
+    }
+
+    public interface SharedPreferencesFactory {
+        SharedPreferences create();
     }
 
 }

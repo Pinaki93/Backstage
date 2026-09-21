@@ -77,7 +77,8 @@ public final class BackstageHttpServer implements Closeable {
         }
         requestedPort = port;
         this.logServerUrls = logServerUrls;
-        container = new BackstageContainer();
+        container = BackstageContainer.getInstance();
+
         requestChainExecutor = RequestChain.Executor.getInstance()
                 .addMiddleware(new KeyValueControllerMiddleware(container))
                 .addMiddleware(new ErrorMiddleware())
@@ -101,11 +102,7 @@ public final class BackstageHttpServer implements Closeable {
         if (serverSocket != null) return;
 
         ServerSocket socket = new ServerSocket(requestedPort, 50, null);
-        ExecutorService executor = Executors.newCachedThreadPool(runnable -> {
-            Thread thread = new Thread(runnable, "Backstage HTTP client");
-            thread.setDaemon(true);
-            return thread;
-        });
+        ExecutorService executor = container.cachedExecutor();
         serverSocket = socket;
         clients = executor;
         Thread acceptThread = new Thread(() -> acceptConnections(socket, executor),
@@ -146,6 +143,7 @@ public final class BackstageHttpServer implements Closeable {
         clients = null;
         if (socket != null) socket.close();
         if (executor != null) executor.shutdownNow();
+        BackstageContainer.teardown();
     }
 
     public interface AssetSource {
