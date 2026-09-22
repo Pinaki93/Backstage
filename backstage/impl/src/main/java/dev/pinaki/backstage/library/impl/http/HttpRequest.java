@@ -23,7 +23,7 @@ public class HttpRequest {
     private final String httpVersion;
     private final Lazy<String> assetPath;
     private final LinkedHashMap<String, String> headers;
-    private final Lazy<RequestBody> bodyWrapper;
+    private final RequestBody body;
 
     public HttpRequest(Socket client, String method, String requestTarget, String httpVersion,
                        LinkedHashMap<String, String> headers, byte[] body) {
@@ -33,7 +33,7 @@ public class HttpRequest {
         this.httpVersion = httpVersion;
         this.headers = headers;
         assetPath = Lazy.wrap(() -> HttpUtil.assetPath(path));
-        bodyWrapper = Lazy.wrap(() -> new RequestBody(body == null ? new byte[0] : body.clone()));
+        this.body = new RequestBody(body == null ? new byte[0] : body.clone());
     }
 
     public String getMethod() {
@@ -61,7 +61,7 @@ public class HttpRequest {
     }
 
     public RequestBody getBody() {
-        return bodyWrapper.get();
+        return body;
     }
 
     public OutputStream startEventStream() throws IOException {
