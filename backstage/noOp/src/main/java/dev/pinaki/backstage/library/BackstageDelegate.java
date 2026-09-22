@@ -14,4 +14,13 @@ public final class BackstageDelegate implements Backstage.Delegate {
     @Override
     public void addController(BasicController controller) {
     }
+
+    @Override
+    public void addController(KeyValueController controller) {
+    }
+
+    @Override
+    public void addSharedPreferencesExplorer(String displayName,
+                                             Backstage.SharedPreferencesFactory factory) {
+    }
 }

@@ -9,9 +9,12 @@ class SampleApp : Application() {
     override fun onCreate() {
         super.onCreate()
         Backstage.getInstance(BackstageDelegate(this))
-            .addController(object : BasicController("/") {
-                override fun getHtmlResource() = R.raw.sample
-            })
+            .withSharedPrefExplorer("User Preferences") {
+                getSharedPreferences("user_preferences", MODE_PRIVATE)
+            }
+            .withSharedPrefExplorer("Feature Flags") {
+                getSharedPreferences("feature_flags", MODE_PRIVATE)
+            }
             .init()
     }
 }

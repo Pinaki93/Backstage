@@ -12,10 +12,14 @@ import java.net.SocketException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import dev.pinaki.backstage.library.impl.di.BackstageContainer;
 import dev.pinaki.backstage.library.impl.http.middlewares.AssetMiddleware;
 import dev.pinaki.backstage.library.impl.http.middlewares.ControllerMiddleware;
 import dev.pinaki.backstage.library.impl.http.middlewares.ErrorMiddleware;
 import dev.pinaki.backstage.library.BasicController;
+import dev.pinaki.backstage.library.KeyValueController;
+import dev.pinaki.backstage.library.impl.http.controller.DashboardController;
+import dev.pinaki.backstage.library.impl.http.middlewares.KeyValueControllerMiddleware;
 
 /**
  * A small HTTP/1.1 server that serves the Backstage web application from assets.
@@ -28,6 +32,7 @@ public final class BackstageHttpServer implements Closeable {
     private ServerSocket serverSocket;
     private ExecutorService clients;
     private final RequestChain.Executor requestChainExecutor;
+    private final BackstageContainer container;
 
     /**
      * Serves files below {@code backstage/} in the application's assets directory.
@@ -47,12 +52,16 @@ public final class BackstageHttpServer implements Closeable {
      */
     public BackstageHttpServer(AssetManager assetManager, int port) {
         this(port, path -> assetManager.open("backstage/" + path, AssetManager.ACCESS_STREAMING),
-                resourceId -> { throw new IOException("No resource source configured"); }, true);
+                resourceId -> {
+                    throw new IOException("No resource source configured");
+                }, true);
     }
 
     BackstageHttpServer(int port, AssetSource assets) {
         this(port, assets,
-                resourceId -> { throw new IOException("No resource source configured"); }, false);
+                resourceId -> {
+                    throw new IOException("No resource source configured");
+                }, false);
     }
 
     BackstageHttpServer(int port, AssetSource assets,
@@ -68,15 +77,22 @@ public final class BackstageHttpServer implements Closeable {
         }
         requestedPort = port;
         this.logServerUrls = logServerUrls;
-        requestChainExecutor = RequestChain.Executor.withMiddlewares(new java.util.ArrayList<>());
-        requestChainExecutor.addMiddleware(new ErrorMiddleware());
-        requestChainExecutor.addMiddleware(
-                new ControllerMiddleware(requestChainExecutor.getControllers(), resources));
-        requestChainExecutor.addMiddleware(new AssetMiddleware(assets));
+        container = BackstageContainer.getInstance();
+        container.controllerFactory().addController(new DashboardController(container));
+
+        requestChainExecutor = RequestChain.Executor.getInstance()
+                .addMiddleware(new KeyValueControllerMiddleware(container))
+                .addMiddleware(new ErrorMiddleware())
+                .addMiddleware(new ControllerMiddleware(container, resources))
+                .addMiddleware(new AssetMiddleware(assets));
     }
 
     public void addController(BasicController controller) {
-        requestChainExecutor.addController(controller);
+        container.controllerFactory().addController(controller);
+    }
+
+    public void addController(KeyValueController controller) {
+        container.controllerFactory().addKeyValueController(controller);
     }
 
     /**
@@ -86,11 +102,7 @@ public final class BackstageHttpServer implements Closeable {
         if (serverSocket != null) return;
 
         ServerSocket socket = new ServerSocket(requestedPort, 50, null);
-        ExecutorService executor = Executors.newCachedThreadPool(runnable -> {
-            Thread thread = new Thread(runnable, "Backstage HTTP client");
-            thread.setDaemon(true);
-            return thread;
-        });
+        ExecutorService executor = container.cachedExecutor();
         serverSocket = socket;
         clients = executor;
         Thread acceptThread = new Thread(() -> acceptConnections(socket, executor),
@@ -131,6 +143,7 @@ public final class BackstageHttpServer implements Closeable {
         clients = null;
         if (socket != null) socket.close();
         if (executor != null) executor.shutdownNow();
+        BackstageContainer.teardown();
     }
 
     public interface AssetSource {

@@ -17,4 +17,9 @@ public abstract class BasicController {
 
     /** Returns the id of a raw HTML resource. */
     public abstract int getHtmlResource();
+
+    /** Returns generated HTML, or {@code null} to use {@link #getHtmlResource()}. */
+    public String getHtml() {
+        return null;
+    }
 }

@@ -26,4 +26,17 @@ public final class BackstageDelegate implements Backstage.Delegate {
     public void addController(BasicController controller) {
         server.addController(controller);
     }
+
+    @Override
+    public void addController(KeyValueController controller) {
+        server.addController(controller);
+    }
+
+    @Override
+    public void addSharedPreferencesExplorer(String displayName,
+                                             Backstage.SharedPreferencesFactory factory) {
+        BackstageLog.d("shared_pref", "Registering explorer: " + displayName);
+        server.addController(new SharedPreferencesKeyValueController(displayName,
+                factory));
+    }
 }

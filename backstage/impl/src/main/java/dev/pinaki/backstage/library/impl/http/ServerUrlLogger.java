@@ -1,7 +1,5 @@
 package dev.pinaki.backstage.library.impl.http;
 
-import android.util.Log;
-
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -10,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+
+import dev.pinaki.backstage.library.BackstageLog;
 
 final class ServerUrlLogger {
     private static final String TAG = "Backstage";
@@ -20,10 +20,11 @@ final class ServerUrlLogger {
     static void log(int port) {
         try {
             for (String url : urls(networkAddresses(), port)) {
-                Log.i(TAG, "Connect to Backstage at " + url);
+                BackstageLog.i(TAG, "Connect to Backstage at " + url);
             }
         } catch (SocketException exception) {
-            Log.w(TAG, "Backstage started, but its network URLs could not be determined", exception);
+            BackstageLog.w(TAG,
+                    "Backstage started, but its network URLs could not be determined", exception);
         }
     }
 
