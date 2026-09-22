@@ -1,7 +1,6 @@
 package dev.pinaki.backstage.library;
 
 import android.content.Context;
-import android.util.Log;
 
 import java.io.IOException;
 
@@ -36,7 +35,7 @@ public final class BackstageDelegate implements Backstage.Delegate {
     @Override
     public void addSharedPreferencesExplorer(String displayName,
                                              Backstage.SharedPreferencesFactory factory) {
-        Log.d("shared_pref", "Registering explorer: " + displayName);
+        BackstageLog.d("shared_pref", "Registering explorer: " + displayName);
         server.addController(new SharedPreferencesKeyValueController(displayName,
                 factory));
     }

@@ -35,5 +35,8 @@ public class BackstageTest {
         assertSame(instance, Backstage.getInstance(delegate));
         assertSame(instance, instance.withSharedPrefExplorer("App Settings", () -> null));
         assertEquals("App Settings", explorerName[0]);
+        assertSame(instance, instance.withLoggingLevel(BackstageLog.Level.INFO));
+        assertEquals(BackstageLog.Level.INFO, BackstageLog.getLevel());
+        BackstageLog.setLevel(BackstageLog.Level.DEBUG);
     }
 }

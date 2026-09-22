@@ -1,11 +1,10 @@
 package dev.pinaki.backstage.library.impl.http.middlewares;
 
-import android.util.Log;
-
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import dev.pinaki.backstage.library.BackstageLog;
 import dev.pinaki.backstage.library.KeyValueController;
 import dev.pinaki.backstage.library.impl.di.BackstageContainer;
 import dev.pinaki.backstage.library.impl.http.HttpRequest;
@@ -51,7 +50,8 @@ public final class KeyValueControllerMiddleware implements Middleware {
             KeyValueController controller = controllerFactory.getKeyValueController(controllerPath);
             if (controller != null) {
                 if (controllerPath.startsWith("/shared-preferences/")) {
-                    Log.d("shared_pref", "Dispatching " + request.getMethod() + " " + path);
+                    BackstageLog.d("shared_pref",
+                            "Dispatching " + request.getMethod() + " " + path);
                 }
                 KeyValueRequestHandler handler = entry.getValue();
                 return handler.handle(request, controller);

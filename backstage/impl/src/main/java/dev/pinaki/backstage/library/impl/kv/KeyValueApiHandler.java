@@ -1,10 +1,9 @@
 package dev.pinaki.backstage.library.impl.kv;
 
-import android.util.Log;
-
 import java.io.IOException;
 import java.util.Map;
 
+import dev.pinaki.backstage.library.BackstageLog;
 import dev.pinaki.backstage.library.KeyValueController;
 import dev.pinaki.backstage.library.impl.http.HttpRequest;
 import dev.pinaki.backstage.library.impl.http.util.MapUtil;
@@ -15,7 +14,8 @@ public final class KeyValueApiHandler implements KeyValueRequestHandler {
     public boolean handle(HttpRequest request, KeyValueController controller) throws IOException {
         try {
             if (controller.getPath().startsWith("/shared-preferences/")) {
-                Log.d("shared_pref", "Handling API method: " + request.getMethod());
+                BackstageLog.d("shared_pref",
+                        "Handling API method: " + request.getMethod());
             }
             if (HttpRequest.GET.equals(request.getMethod())) {
                 return ResponseUtil.json(request, controller.getEntries());
@@ -39,7 +39,7 @@ public final class KeyValueApiHandler implements KeyValueRequestHandler {
             }
         } catch (IllegalArgumentException invalid) {
             if (controller.getPath().startsWith("/shared-preferences/")) {
-                Log.e("shared_pref", "SharedPreferences request failed", invalid);
+                BackstageLog.e("shared_pref", "SharedPreferences request failed", invalid);
             }
             return ResponseUtil.text(request, 400, "Bad Request",
                     invalid.getMessage() == null ? "Bad Request" : invalid.getMessage());

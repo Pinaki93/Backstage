@@ -1,7 +1,6 @@
 package dev.pinaki.backstage.library;
 
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -13,42 +12,42 @@ final class SharedPreferencesKeyValueController extends KeyValueController {
     SharedPreferencesKeyValueController(String displayName,
                                         Backstage.SharedPreferencesFactory factory) {
         this(displayName, new PreferencesSource(factory));
-        Log.d(TAG, "Created explorer: " + getPath());
+        BackstageLog.d(TAG, "Created explorer: " + getPath());
     }
 
     private SharedPreferencesKeyValueController(String displayName, PreferencesSource source) {
         super(displayName, path(displayName), source);
         this.source = source;
-        Log.d(TAG, "Configured explorer: " + getPath());
+        BackstageLog.d(TAG, "Configured explorer: " + getPath());
     }
 
     @Override protected void onAccess() {
-        Log.d(TAG, "Accessing explorer: " + getPath());
+        BackstageLog.d(TAG, "Accessing explorer: " + getPath());
         source.start();
     }
 
     @Override public void create(String key, String value) {
-        Log.d(TAG, "Creating key: " + key);
+        BackstageLog.d(TAG, "Creating key: " + key);
         source.preferences().edit().putString(key, value).apply();
     }
 
     @Override public void update(String key, String value) {
-        Log.d(TAG, "Updating key: " + key);
+        BackstageLog.d(TAG, "Updating key: " + key);
         source.preferences().edit().putString(key, value).apply();
     }
 
     @Override public void delete(String key) {
-        Log.d(TAG, "Deleting key: " + key);
+        BackstageLog.d(TAG, "Deleting key: " + key);
         source.preferences().edit().remove(key).apply();
     }
 
     @Override public void clear() {
-        Log.d(TAG, "Clearing preferences");
+        BackstageLog.d(TAG, "Clearing preferences");
         source.preferences().edit().clear().apply();
     }
 
     private static String path(String displayName) {
-        Log.d(TAG, "Creating path for: " + displayName);
+        BackstageLog.d(TAG, "Creating path for: " + displayName);
         if (displayName == null) throw new IllegalArgumentException("displayName must not be null");
         String slug = displayName.trim().toLowerCase(java.util.Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
@@ -61,7 +60,7 @@ final class SharedPreferencesKeyValueController extends KeyValueController {
         for (Map.Entry<String, ?> entry : preferences.getAll().entrySet()) {
             entries.put(entry.getKey(), String.valueOf(entry.getValue()));
         }
-        Log.d(TAG, "Read " + entries.size() + " entries");
+        BackstageLog.d(TAG, "Read " + entries.size() + " entries");
         return entries;
     }
 
@@ -73,36 +72,36 @@ final class SharedPreferencesKeyValueController extends KeyValueController {
 
         private PreferencesSource(Backstage.SharedPreferencesFactory factory) {
             this.factory = factory;
-            Log.d(TAG, "Created lazy preferences source");
+            BackstageLog.d(TAG, "Created lazy preferences source");
         }
 
         @Override public void subscribe(EntriesCallback callback) {
-            Log.d(TAG, "Subscribed controller callback");
+            BackstageLog.d(TAG, "Subscribed controller callback");
             this.callback = callback;
         }
 
         private synchronized SharedPreferences preferences() {
-            Log.d(TAG, "Requesting SharedPreferences");
+            BackstageLog.d(TAG, "Requesting SharedPreferences");
             start();
             return preferences;
         }
 
         private synchronized void start() {
             if (preferences != null) {
-                Log.d(TAG, "SharedPreferences already initialized");
+                BackstageLog.d(TAG, "SharedPreferences already initialized");
                 return;
             }
-            Log.d(TAG, "Initializing SharedPreferences");
+            BackstageLog.d(TAG, "Initializing SharedPreferences");
             preferences = factory.create();
             if (preferences == null) {
                 throw new IllegalArgumentException("factory must return SharedPreferences");
             }
             listener = (ignored, key) -> {
-                Log.d(TAG, "Preference changed: " + key);
+                BackstageLog.d(TAG, "Preference changed: " + key);
                 callback.onChanged(entries(preferences));
             };
             preferences.registerOnSharedPreferenceChangeListener(listener);
-            Log.d(TAG, "Registered preference change listener");
+            BackstageLog.d(TAG, "Registered preference change listener");
             callback.onChanged(entries(preferences));
         }
     }

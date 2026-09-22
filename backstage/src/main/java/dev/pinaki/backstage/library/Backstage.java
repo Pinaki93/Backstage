@@ -57,6 +57,11 @@ public class Backstage {
         return this;
     }
 
+    public Backstage withLoggingLevel(BackstageLog.Level level) {
+        BackstageLog.setLevel(level);
+        return this;
+    }
+
     public interface SharedPreferencesFactory {
         SharedPreferences create();
     }
