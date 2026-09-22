@@ -1,16 +1,20 @@
-package dev.pinaki.backstage.library;
+package dev.pinaki.backstage.library.impl.http.controller;
 
 import android.content.SharedPreferences;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-final class SharedPreferencesKeyValueController extends KeyValueController {
+import dev.pinaki.backstage.library.Backstage;
+import dev.pinaki.backstage.library.BackstageLog;
+import dev.pinaki.backstage.library.KeyValueController;
+
+public final class SharedPreferencesKeyValueController extends KeyValueController {
     private static final String TAG = "shared_pref";
     private final PreferencesSource source;
 
-    SharedPreferencesKeyValueController(String displayName,
-                                        Backstage.SharedPreferencesFactory factory) {
+    public SharedPreferencesKeyValueController(String displayName,
+                                               Backstage.SharedPreferencesFactory factory) {
         this(displayName, new PreferencesSource(factory));
         BackstageLog.d(TAG, "Created explorer: " + getPath());
     }
@@ -21,27 +25,32 @@ final class SharedPreferencesKeyValueController extends KeyValueController {
         BackstageLog.d(TAG, "Configured explorer: " + getPath());
     }
 
-    @Override protected void onAccess() {
+    @Override
+    protected void onAccess() {
         BackstageLog.d(TAG, "Accessing explorer: " + getPath());
         source.start();
     }
 
-    @Override public void create(String key, String value) {
+    @Override
+    public void create(String key, String value) {
         BackstageLog.d(TAG, "Creating key: " + key);
         source.preferences().edit().putString(key, value).apply();
     }
 
-    @Override public void update(String key, String value) {
+    @Override
+    public void update(String key, String value) {
         BackstageLog.d(TAG, "Updating key: " + key);
         source.preferences().edit().putString(key, value).apply();
     }
 
-    @Override public void delete(String key) {
+    @Override
+    public void delete(String key) {
         BackstageLog.d(TAG, "Deleting key: " + key);
         source.preferences().edit().remove(key).apply();
     }
 
-    @Override public void clear() {
+    @Override
+    public void clear() {
         BackstageLog.d(TAG, "Clearing preferences");
         source.preferences().edit().clear().apply();
     }
@@ -51,7 +60,8 @@ final class SharedPreferencesKeyValueController extends KeyValueController {
         if (displayName == null) throw new IllegalArgumentException("displayName must not be null");
         String slug = displayName.trim().toLowerCase(java.util.Locale.ROOT)
                 .replaceAll("[^a-z0-9]+", "-").replaceAll("(^-|-$)", "");
-        if (slug.isEmpty()) throw new IllegalArgumentException("displayName must contain a letter or number");
+        if (slug.isEmpty())
+            throw new IllegalArgumentException("displayName must contain a letter or number");
         return "/shared-preferences/" + slug;
     }
 
@@ -75,7 +85,8 @@ final class SharedPreferencesKeyValueController extends KeyValueController {
             BackstageLog.d(TAG, "Created lazy preferences source");
         }
 
-        @Override public void subscribe(EntriesCallback callback) {
+        @Override
+        public void subscribe(EntriesCallback callback) {
             BackstageLog.d(TAG, "Subscribed controller callback");
             this.callback = callback;
         }
