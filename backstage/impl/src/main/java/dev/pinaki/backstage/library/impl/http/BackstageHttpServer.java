@@ -78,12 +78,12 @@ public final class BackstageHttpServer implements Closeable {
         requestedPort = port;
         this.logServerUrls = logServerUrls;
         container = BackstageContainer.getInstance();
+        container.controllerFactory().addController(new DashboardController(container));
 
         requestChainExecutor = RequestChain.Executor.getInstance()
                 .addMiddleware(new KeyValueControllerMiddleware(container))
                 .addMiddleware(new ErrorMiddleware())
                 .addMiddleware(new ControllerMiddleware(container, resources))
-                .addMiddleware(new DashboardController(container))
                 .addMiddleware(new AssetMiddleware(assets));
     }
 

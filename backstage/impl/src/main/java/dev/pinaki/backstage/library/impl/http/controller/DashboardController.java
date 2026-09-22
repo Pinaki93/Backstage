@@ -1,34 +1,28 @@
 package dev.pinaki.backstage.library.impl.http.controller;
 
-import java.io.IOException;
-
 import dev.pinaki.backstage.library.BasicController;
 import dev.pinaki.backstage.library.KeyValueController;
 import dev.pinaki.backstage.library.impl.di.BackstageContainer;
-import dev.pinaki.backstage.library.impl.http.HttpRequest;
-import dev.pinaki.backstage.library.impl.http.Middleware;
-import dev.pinaki.backstage.library.impl.http.util.ResponseUtil;
 
-public final class DashboardController implements Middleware {
+public final class DashboardController extends BasicController {
 
     private final ControllerFactory controllerFactory;
 
     public DashboardController(BackstageContainer container) {
+        super("/backstage");
         controllerFactory = container.controllerFactory();
     }
 
     @Override
-    public boolean canHandle(HttpRequest request) {
-        return "/backstage".equals(request.getPath()) ||
-                ("/".equals(request.getPath()) &&
-                        !controllerFactory.keyValueControllers().isEmpty());
+    public int getHtmlResource() {
+        return 0;
     }
 
     @Override
-    public boolean handle(HttpRequest request) throws IOException {
+    public String getHtml() {
         StringBuilder links = new StringBuilder();
         for (BasicController controller : controllerFactory.basicControllers()) {
-            if (!"/".equals(controller.getPath())) appendLink(links, controller.getPath(),
+            if (!getPath().equals(controller.getPath())) appendLink(links, controller.getPath(),
                     controller.getPath());
         }
         for (KeyValueController controller :
@@ -43,7 +37,7 @@ public final class DashboardController implements Middleware {
                 + "<title>Backstage</title><style>" + styles() + "</style></head><body>"
                 + "<main><h1>Backstage</h1><p>Registered controllers</p><ul>" + links
                 + "</ul></main></body></html>";
-        return ResponseUtil.html(request, body);
+        return body;
     }
 
     private static void appendLink(StringBuilder output, String path, String label) {

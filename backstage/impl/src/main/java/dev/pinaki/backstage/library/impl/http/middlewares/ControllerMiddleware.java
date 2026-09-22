@@ -39,6 +39,10 @@ public final class ControllerMiddleware implements Middleware {
     public boolean handle(HttpRequest request) throws IOException {
         for (BasicController controller : controllerFactory.basicControllers()) {
             if (controller.getPath().equals(request.getPath())) {
+                String generatedHtml = controller.getHtml();
+                if (generatedHtml != null) {
+                    return ResponseUtil.html(request, generatedHtml);
+                }
                 try (InputStream html = resources.open(controller.getHtmlResource())) {
                     ResponseUtil.html(request, StreamUtil.readFully(html));
                 }

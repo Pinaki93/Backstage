@@ -42,7 +42,7 @@ public class KeyValueBackstageHttpServerTest {
     public void dashboardListsRegisteredKeyValueController() throws IOException {
         server.addController(new TestKeyValueController());
 
-        String response = request("GET / HTTP/1.1\r\n\r\n");
+        String response = request("GET /backstage HTTP/1.1\r\n\r\n");
 
         assertTrue(response.endsWith("</body></html>"));
         assertTrue(response.contains("Preferences"));
